@@ -2,10 +2,9 @@
 
 > **You're an agent** working in a **lean, universal Rayfin app** (a Microsoft
 > Fabric Backend-as-a-Service app). It ships as a tiny "hello world" and is
-> designed to **grow into whatever the user asks for** — a CRUD app, a
-> file-storage app, a charts dashboard, a Power BI analytics dashboard, or any
-> mix. Your job is to grow it **on demand**, pulling in only the capabilities the
-> request actually needs.
+> designed to **grow into whatever the user asks for** — a CRUD app, a charts
+> dashboard, a Power BI analytics dashboard, or any mix. Your job is to grow it
+> **on demand**, pulling in only the capabilities the request actually needs.
 
 **Before you write any code, do two things:**
 
@@ -32,8 +31,8 @@ A minimal React 19 + Vite app, Fabric-ready but deliberately bare:
   renders a declarative `<Chart spec={…} />`. The `graphein-visuals` pack covers
   authoring specs.
 - An **empty data schema** (`rayfin/data/schema.ts`) and `rayfin/rayfin.yml` with
-  `auth` + `data` (mssql) + `staticHosting` enabled. Storage, functions, and the
-  analytics stack are **off/absent** until a pack turns them on.
+  `auth` + `data` (mssql) + `staticHosting` enabled. The analytics stack is
+  **absent** until the analytics pack turns it on.
 
 ## The capability packs
 
@@ -44,8 +43,6 @@ relevant. The router picks packs; the pack skill has the details.
 |---|---|
 | `authentication` | Sign-in, accounts, login, protected pages, per-user data |
 | `data-modeling` | Records, CRUD, a database, entities, row-level security |
-| `storage` | File upload, attachments, images, blobs |
-| `functions` | Server-side logic, webhooks, scheduled/background work |
 | `graphein-visuals` | Charts, graphs, KPIs, tables, a simple dashboard |
 | `analytics` | Power BI / semantic-model dashboards, DAX, BI reporting |
 
@@ -63,10 +60,10 @@ only when you're on the analytics path.
   to see the app running. `npm run preview` serves the base app locally with no
   backend for a quick look; `npm run dev` runs it against your deployment. A real
   deploy is needed once the app requires auth or data.
-- **Only use what Rayfin natively provides** (auth, data, storage, functions,
-  static hosting) — don't add external services like payment processors or email
-  senders. Prefer **stable, Fabric-supported** features unless the user asks for
-  an experimental one.
+- **Only use what Rayfin natively provides** (auth, data, static hosting) — don't
+  add external services like payment processors or email senders. Prefer
+  **stable, Fabric-supported** features unless the user asks for an experimental
+  one.
 - **Installing npm modules is expected** — install what a pack needs; don't
   pre-install everything.
 
@@ -81,8 +78,6 @@ Fabric.
 | Add sign-in / accounts / per-user data | `authentication` |
 | Store records / build CRUD / add a table | `data-modeling` |
 | Restrict rows to their owner | `data-modeling` → row-level security |
-| Upload / show files or images | `storage` |
-| Run server-side logic / a webhook | `functions` |
 | Add a chart / KPI / small dashboard | `graphein-visuals` |
 | Build a Power BI / semantic-model dashboard | `analytics` (then its sub-skills) |
 | Make it look polished / themed | the relevant pack's styling notes + Tailwind theme in `src/main.css` |

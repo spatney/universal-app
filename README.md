@@ -20,8 +20,6 @@ to one or more **capability packs**, and only then pulls each one in:
 |---|---|---|
 | Sign-in / accounts / per-user data | `authentication` | Wire the Fabric auth that already ships in `src/services/` |
 | Data, records, CRUD, a database | `data-modeling` | Entities + row-level security in `rayfin/data/`, `data` service |
-| File upload / attachments | `storage` | The `storage` service + upload wiring |
-| Server-side logic / webhooks | `functions` | The `functions` service + a functions dir |
 | Charts, dashboards, KPIs | `graphein-visuals` | Author Graphein specs, drop into `<Chart>` |
 | Power BI / semantic-model analytics | `analytics` | The dashboard kit, DAX queries, and headless preview |
 
@@ -44,8 +42,6 @@ npm run rayfin:up
 │   ├── capability-router/          # Start-here orchestrator
 │   ├── authentication/             # Turn on Fabric sign-in
 │   ├── data-modeling/              # Entities + row-level security
-│   ├── storage/                    # File storage
-│   ├── functions/                  # Server-side functions
 │   ├── graphein-visuals/           # Charts as declarative specs
 │   └── analytics/                  # Power BI semantic model + DAX dashboards
 ├── rayfin/

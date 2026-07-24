@@ -26,7 +26,7 @@ asked for.
    grow later — you can always route again on the next turn.
 2. **For each chosen pack, in order:**
    1. **Enable the service** — edit `rayfin/rayfin.yml` (see the pack's row).
-      Auth + data + static hosting are already on; storage/functions are off.
+      Auth + data + static hosting are already on.
    2. **Install the modules** — `npm install <…>` for that pack. Install just
       what the pack needs; skip modules already in `package.json`.
    3. **Scaffold the code** — create the entities / wiring / files the pack calls
@@ -42,15 +42,13 @@ asked for.
 |---|---|---|---|---|---|
 | **authentication** | sign-in, accounts, login, logout, protected pages, "who is the current user", per-user data | `auth` (already on) | — (scaffolding already present) | Wire `AuthProvider` + `bootstrapAuth()` in `src/main.tsx`; add the route guard in `src/App.tsx` | `authentication` |
 | **data-modeling** | records, CRUD, a database, entities, lists, "save/store X", per-user rows, row-level security | `data` (already on, `dialect: mssql`) | `@microsoft/rayfin-data` | Add entity classes under `rayfin/data/*.ts`; register them in `rayfin/data/schema.ts`; read/write via the `rayfin-client` | `data-modeling` |
-| **storage** | upload files, attachments, images, documents, blobs | `services.storage.enabled: true` | — | Add upload/download wiring against the Rayfin storage API | `storage` |
-| **functions** | server-side logic, webhooks, custom endpoints, scheduled/background work | `services.functions.enabled: true` | — | Add a functions directory + handlers | `functions` |
 | **graphein-visuals** | a chart, graph, plot, KPI, table, or small dashboard over app data | — | `graphein` (already present) | Author a `ChartSpec`, drop into `<Chart spec={…} />` (`src/components/Chart.tsx`) | `graphein-visuals` |
 | **analytics** | a **Power BI / semantic-model** dashboard, DAX measures, BI reporting over an existing dataset | `auth` on; **`data` off** (read-only analytics) | see `analytics/MODULES.md` | Copy `analytics/kit/**` into `src/` + wire the semantic model | `analytics` (then `build-workflow`, `visuals`, `dax`, `fabric-data`, `app-design`, `headless-preview`) |
 
 ## Notes on routing
 
 - **App-building vs analytics are different shapes.** The app-building packs
-  (`authentication`, `data-modeling`, `storage`, `functions`, `graphein-visuals`)
+  (`authentication`, `data-modeling`, `graphein-visuals`)
   build a normal interactive app over Rayfin data, with `data` enabled. The
   **`analytics`** pack builds a read-only dashboard over an external Power BI
   **semantic model** (`data` disabled, its own dashboard kit). If the user wants
@@ -60,8 +58,5 @@ asked for.
   (e.g. `data-modeling` for the data + `graphein-visuals` for the chart).
 - **Row-level security** lives inside `data-modeling` — route there when the user
   says "each user only sees their own …".
-- **Storage and functions are off by default** and functions is a
-  preview/feature-flagged surface — only enable them when explicitly needed, and
-  prefer stable features (see `AGENTS.md`).
 - **Grow incrementally.** Ship the core of what was asked, let it deploy, then add
   the next capability. You don't have to wire every pack up front.
