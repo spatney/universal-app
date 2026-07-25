@@ -50,6 +50,18 @@ The `analytics` pack also brings its own supporting skills (`build-workflow`,
 `visuals`, `dax`, `fabric-data`, `app-design`, `headless-preview`) — read those
 only when you're on the analytics path.
 
+> **Fast path — one command.** A pack that ships a `pack.json` manifest turns on
+> with a single idempotent command instead of dozens of manual steps:
+>
+> ```sh
+> npm run pack:add -- <pack>      # e.g. analytics
+> ```
+>
+> It enables the service, installs the pinned modules, copies the kit, wires the
+> scripts, seeds a runnable demo, and runs `npm install`. **`analytics`** ships a
+> manifest today; more capabilities/connectors will adopt the same mechanism.
+> See `.agents/skills/capability-router/pack-manifest.md`.
+
 ---
 
 ## Rules
@@ -79,5 +91,5 @@ Fabric.
 | Store records / build CRUD / add a table | `data-modeling` |
 | Restrict rows to their owner | `data-modeling` → row-level security |
 | Add a chart / KPI / small dashboard | `graphein-visuals` |
-| Build a Power BI / semantic-model dashboard | `analytics` (then its sub-skills) |
+| Build a Power BI / semantic-model dashboard | run **`npm run pack:add -- analytics`**, then `analytics` (then its sub-skills) |
 | Make it look polished / themed | the relevant pack's styling notes + Tailwind theme in `src/main.css` |

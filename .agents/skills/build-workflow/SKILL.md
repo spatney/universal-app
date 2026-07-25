@@ -22,9 +22,10 @@ perfect theming before anything is visible — that is the slowest possible path
 
 ## The loop
 
-**Edit → preview each visual → wire it in → deploy (`rayfin up`) →
-review → refine.** Keep each loop small. One reviewed change beats a
-big-bang build every time.
+**Edit → preview each visual (headless) → wire it in → (milestone) deploy with
+`rayfin up` → review → refine.** Keep each edit/preview loop small and **local**:
+the headless preview is your fast inner loop, so `rayfin up` is a *milestone*
+step, not a per-visual one. One reviewed change beats a big-bang build every time.
 
 - **All visuals:** render the spec **headlessly against live data** to a PNG +
   report — `npm run preview` — and critique it before it ships. Use it to choose
@@ -37,6 +38,10 @@ big-bang build every time.
 
 Get ONE compelling, real visual wired to live data, previewed, and on screen —
 as fast as possible.
+
+> **Scaffold first, then start here.** `npm run pack:add -- analytics` already
+> gave you the dashboard kit + a runnable demo (`src/demo`). Don't re-read setup
+> or re-copy files — go straight to the hero slice, then swap the demo for it.
 
 0. **Pick an archetype** — decide the dashboard's shape from the request: executive
    summary, operational monitoring, or analytical deep-dive. This frames the hero
@@ -88,6 +93,10 @@ Now refine, driven by what the running app actually shows:
   live data is the validation loop for getting one visual right.
 - **Validate visuals headlessly before you deploy.** A `npm run preview` against
   live data catches problems far faster than a deploy round-trip.
+- **Deploy sparingly — `rayfin up` is a slow round-trip.** Use it for milestone
+  review: once after the hero slice, then after a *batch* of Phase 2 work — never
+  per visual. Headless preview is the per-visual loop, so a "simple dashboard"
+  should reach the user in **one or two deploys**, not one per tile.
 - **One reviewed change at a time.** Small loops surface problems immediately.
 - **Read references lazily.** The sibling skills carry deep references (DAX
   patterns, visual recipes, style recipes). Open them only when a specific

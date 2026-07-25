@@ -21,7 +21,7 @@ to one or more **capability packs**, and only then pulls each one in:
 | Sign-in / accounts / per-user data | `authentication` | Wire the Fabric auth that already ships in `src/services/` |
 | Data, records, CRUD, a database | `data-modeling` | Entities + row-level security in `rayfin/data/`, `data` service |
 | Charts, dashboards, KPIs | `graphein-visuals` | Author Graphein specs, drop into `<Chart>` |
-| Power BI / semantic-model analytics | `analytics` | The dashboard kit, DAX queries, and headless preview |
+| Power BI / semantic-model analytics | `analytics` | One command — `npm run pack:add -- analytics` scaffolds the dashboard kit, DAX + headless preview, and a runnable demo |
 
 Nothing heavy is loaded until it's needed — the base app stays small and fast.
 
@@ -70,6 +70,7 @@ router turns it on when your app needs sign-in — see
 | Command | Description |
 |---------|-------------|
 | `npm run preview` | Preview the home page locally — no backend, no deploy |
+| `npm run pack:add -- <pack>` | Turn on a capability pack in one step (e.g. `analytics`) — see `.agents/skills/capability-router/pack-manifest.md` |
 | `npm run build` | Production build |
 | `npm run build:fabric` | Build for Fabric deployment (entrypoint for `rayfin up`) |
 | `npm run lint` | Lint with ESLint |
