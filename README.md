@@ -19,7 +19,7 @@ to one or more **capability packs**, and only then pulls each one in:
 | You ask for… | The router activates | Which brings in |
 |---|---|---|
 | Sign-in / accounts / per-user data | `authentication` | Wire the Fabric auth that already ships in `src/services/` |
-| Data, records, CRUD, a database | `data-modeling` | Entities + row-level security in `rayfin/data/`, `data` service |
+| Data, records, CRUD, a database | `data-modeling` **+ `authentication`** | Entities + row-level security in `rayfin/data/`; auth wired in, since Rayfin data is always authenticated |
 | Charts, dashboards, KPIs | `graphein-visuals` | Author Graphein specs, drop into `<Chart>` |
 | Power BI / semantic-model analytics | `analytics` | One command — `npm run pack:add -- analytics` scaffolds the dashboard kit, DAX + headless preview, and a runnable demo |
 
@@ -61,9 +61,10 @@ npm run rayfin:up
 └── package.json
 ```
 
-Authentication ships wired **off** so the app previews with no backend. The
-router turns it on when your app needs sign-in — see
-`.agents/skills/authentication/SKILL.md`.
+Authentication ships wired **off** so the static base previews with no backend.
+It's wired in automatically as soon as your app **uses data** (Rayfin data is
+always authenticated) or needs sign-in — a static page over public data stays
+no-auth. See `.agents/skills/authentication/SKILL.md`.
 
 ## Scripts
 

@@ -47,7 +47,7 @@ asked for.
 | Pack | Route here when the user wants… | Enable in `rayfin.yml` | Install | Scaffold | Then read |
 |---|---|---|---|---|---|
 | **authentication** | sign-in, accounts, login, logout, protected pages, "who is the current user", per-user data | `auth` (already on) | — (scaffolding already present) | Wire `AuthProvider` + `bootstrapAuth()` in `src/main.tsx`; add the route guard in `src/App.tsx` | `authentication` |
-| **data-modeling** | records, CRUD, a database, entities, lists, "save/store X", per-user rows, row-level security | `data` (already on, `dialect: mssql`) | `@microsoft/rayfin-data` | Add entity classes under `rayfin/data/*.ts`; register them in `rayfin/data/schema.ts`; read/write via the `rayfin-client` | `data-modeling` |
+| **data-modeling** | records, CRUD, a database, entities, lists, "save/store X", per-user rows, row-level security | `data` (already on, `dialect: mssql`) + `auth` | `@microsoft/rayfin-data` | Add entity classes under `rayfin/data/*.ts`; register them in `rayfin/data/schema.ts`; read/write via the `rayfin-client`; **wire auth** (Rayfin data is always authenticated) | `data-modeling` **+ `authentication`** |
 | **graphein-visuals** | a chart, graph, plot, KPI, table, or small dashboard over app data | — | `graphein` (already present) | Author a `ChartSpec`, drop into `<Chart spec={…} />` (`src/components/Chart.tsx`) | `graphein-visuals` |
 | **analytics** | a **Power BI / semantic-model** dashboard, DAX measures, BI reporting over an existing dataset | one command: **`npm run pack:add -- analytics`** (sets `auth` on / **`data` off**, installs modules, copies `kit/**`, seeds a runnable demo) | — (the command installs them) | — (the command copies the kit + seeds `App.tsx`/`main.tsx`); then wire the semantic model | `analytics` (then `build-workflow`, `visuals`, `dax`, `fabric-data`, `app-design`, `headless-preview`) |
 
@@ -64,5 +64,11 @@ asked for.
   (e.g. `data-modeling` for the data + `graphein-visuals` for the chart).
 - **Row-level security** lives inside `data-modeling` — route there when the user
   says "each user only sees their own …".
+- **Data implies auth.** Rayfin data is always accessed as an authenticated user
+  (no anonymous access on Fabric), so any request that stores or reads app data —
+  `data-modeling` especially — must **also wire `authentication`**; route to both.
+  A **static page over public data** needs neither. (Analytics is separate: its
+  Power BI model is read through the Fabric embed proxy, which Fabric
+  authenticates — no app `AuthProvider` needed.)
 - **Grow incrementally.** Ship the core of what was asked, let it deploy, then add
   the next capability. You don't have to wire every pack up front.

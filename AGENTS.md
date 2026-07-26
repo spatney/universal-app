@@ -26,7 +26,8 @@ A minimal React 19 + Vite app, Fabric-ready but deliberately bare:
 - A no-auth `HomePage` (`src/pages/HomePage.tsx`) rendered by `src/App.tsx` — so
   it previews with **no backend** (`npm run preview`).
 - **Fabric auth scaffolding, wired OFF** under `src/services/` +
-  `src/hooks/AuthContext.tsx`. The `authentication` pack turns it on.
+  `src/hooks/AuthContext.tsx` — the base is a static, public page, so it needs no
+  auth. **Wire auth in as soon as the app uses data** (see the rule in Rules).
 - **Graphein** wired in for charts: `src/components/Chart.tsx` (+ `useChart.ts`)
   renders a declarative `<Chart spec={…} />`. The `graphein-visuals` pack covers
   authoring specs.
@@ -78,6 +79,11 @@ only when you're on the analytics path.
   one.
 - **Installing npm modules is expected** — install what a pack needs; don't
   pre-install everything.
+- **Auth follows data.** Rayfin data is always accessed as an authenticated user
+  (no anonymous access on Fabric), so **wire authentication whenever the app uses
+  or connects to data** — `data-modeling`, per-user rows, row-level security. A
+  **static page over public data** needs no auth. (Analytics reads its Power BI
+  model through the Fabric embed proxy, which Fabric authenticates.)
 
 When you finish a capability, build and deploy (`npm run rayfin:up`) to see it on
 Fabric.
