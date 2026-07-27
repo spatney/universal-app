@@ -59,9 +59,29 @@ only when you're on the analytics path.
 > ```
 >
 > It enables the service, installs the pinned modules, copies the kit, wires the
-> scripts, seeds a runnable demo, and runs `npm install`. **`analytics`** ships a
+> scripts, seeds a runnable demo, and installs deps from the **prebuilt cache**
+> (falling back to `npm install`). **`analytics`** ships a
 > manifest today; more capabilities/connectors will adopt the same mechanism.
 > See `.agents/skills/capability-router/pack-manifest.md`.
+
+---
+
+## Fast dependency install
+
+Dependencies come from a **prebuilt, per-platform `node_modules` cache** so you
+don't wait on a cold `npm install`:
+
+- **`npm run setup`** downloads the `node_modules` tarball matching this
+  platform + lockfile from the template's `deps-cache` GitHub Release and
+  extracts it. If the cache is missing for your platform it **falls back to a
+  normal install**, and it's a **no-op** when `node_modules` already exists.
+- Scaffolding runs `rayfin init … --skip-install` then `npm run setup`, so the
+  base app is ready fast.
+- `npm run pack:add -- <pack>` uses the same cache for a pack's deps (e.g.
+  `analytics`), falling back to `npm install` automatically.
+
+The cache is published by `.github/workflows/build-deps-cache.yml` — nothing to
+maintain by hand.
 
 ---
 

@@ -9,6 +9,8 @@
     "description": "A lean React + Vite starter that grows into anything. A built-in capability router reads what you ask for, then enables the right Rayfin services, installs the right modules, and activates the right skills — CRUD apps, storage, functions, charts, or Fabric analytics dashboards."
   },
   "scripts": {
+    "setup": "node scripts/fetch-deps.mjs",
+    "setup:analytics": "node scripts/fetch-deps.mjs --variant analytics",
     "predev": "rayfin env --framework vite",
     "prebuild": "rayfin env --framework vite",
     "dev": "rayfin up --exclude-services staticHosting && vite",

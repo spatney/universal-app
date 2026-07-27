@@ -6,7 +6,7 @@
 //   1. patches Fabric service flags in `rayfin/rayfin.yml`,
 //   2. merges the pack's pinned dependencies + scripts into `package.json`,
 //   3. copies the pack's kit files into the project,
-//   4. runs a single batched `npm install`.
+//   4. installs deps via the prebuilt cache (falling back to `npm install`).
 //
 // This replaces the slow, error-prone "copy ~60 files by hand + install ~40
 // packages + rewire scripts" flow with `npm run pack:add <pack>`. It is
@@ -193,22 +193,25 @@ function main() {
   }
   log(`  - copied ${copied} file(s)` + (skipped.length ? `; kept your ${skipped.join(', ')}` : ''));
 
-  // 4) install
+  // 4) install — route through the prebuilt dependency cache. For a pack that
+  //    has a published cache variant (e.g. analytics) this extracts a prebuilt
+  //    node_modules; for any other pack it transparently falls back to a normal
+  //    `npm install`. `--force` is required because node_modules already exists
+  //    from the base install and we're intentionally growing the tree.
   if (dryRun) {
     log('\n(dry run - nothing written, nothing installed)');
   } else if (flags['no-install']) {
     log('\n(--no-install - run `npm install` to fetch the new dependencies)');
   } else {
-    log('\n> Installing dependencies (npm install)...');
+    log('\n> Installing dependencies (prebuilt cache with npm fallback)...');
     // Single-string command with shell:true keeps this cross-platform (cmd.exe on
     // Windows, /bin/sh elsewhere) and avoids Node's DEP0190 args+shell warning.
-    const res = spawnSync('npm install --no-audit --no-fund', {
-      cwd: ROOT,
-      stdio: 'inherit',
-      shell: true,
-    });
+    const res = spawnSync(
+      `node scripts/fetch-deps.mjs --variant ${pack} --force`,
+      { cwd: ROOT, stdio: 'inherit', shell: true },
+    );
     if (res.status !== 0) {
-      warn('\n! npm install failed - resolve the error above, then re-run.');
+      warn('\n! dependency install failed - resolve the error above, then re-run.');
       process.exit(res.status ?? 1);
     }
   }

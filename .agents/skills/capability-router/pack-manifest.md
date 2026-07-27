@@ -10,8 +10,9 @@ npm run pack:add -- <pack>        # e.g. analytics
 
 `scripts/scaffold.mjs` reads `.agents/skills/<pack>/pack.json` and, in one
 **idempotent** pass: patches Fabric service flags, merges dependencies + scripts
-into `package.json`, copies the pack's kit files into the project, then runs a
-single `npm install`. This replaces "copy dozens of files by hand + install
+into `package.json`, copies the pack's kit files into the project, then installs
+its dependencies (via the prebuilt cache, falling back to `npm install`). This
+replaces "copy dozens of files by hand + install
 dozens of packages + rewire scripts" — the slow part of a build.
 
 > **This is the general mechanism, not an analytics feature.** New connectors and

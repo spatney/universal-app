@@ -27,8 +27,11 @@ Nothing heavy is loaded until it's needed — the base app stays small and fast.
 
 ## Getting started
 
-Describe what you want to build to your coding agent, or start editing. To deploy
-to Fabric:
+Describe what you want to build to your coding agent, or start editing.
+
+Dependencies install fast from a **prebuilt per-platform cache** — run
+`npm run setup` (it falls back to a normal `npm install` if no cache is available
+for your platform). To deploy to Fabric:
 
 ```bash
 npm run rayfin:up
@@ -70,6 +73,8 @@ no-auth. See `.agents/skills/authentication/SKILL.md`.
 
 | Command | Description |
 |---------|-------------|
+| `npm run setup` | Install dependencies fast from the prebuilt per-platform cache (falls back to `npm install`) |
+| `npm run setup:analytics` | Same, for the base **+ analytics** pack dependency set |
 | `npm run preview` | Preview the home page locally — no backend, no deploy |
 | `npm run pack:add -- <pack>` | Turn on a capability pack in one step (e.g. `analytics`) — see `.agents/skills/capability-router/pack-manifest.md` |
 | `npm run build` | Production build |

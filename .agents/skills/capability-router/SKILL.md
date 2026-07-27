@@ -26,15 +26,18 @@ asked for.
    grow later — you can always route again on the next turn.
 2. **For each chosen pack, in order:**
    0. **If the pack ships a `pack.json`, scaffold it in one command** — `npm run
-      pack:add -- <pack>` enables the service, installs the pinned modules,
-      copies the kit, and wires scripts in one idempotent pass (see
+      pack:add -- <pack>` enables the service, installs the pinned modules (from
+      the prebuilt dependency cache, falling back to `npm install`), copies the
+      kit, and wires scripts in one idempotent pass (see
       [`pack-manifest.md`](pack-manifest.md)). Today **`analytics`** ships one, so
       that whole path is a single command — then jump straight to reading the
       pack skill. Otherwise, do the manual steps below.
    1. **Enable the service** — edit `rayfin/rayfin.yml` (see the pack's row).
       Auth + data + static hosting are already on.
    2. **Install the modules** — `npm install <…>` for that pack. Install just
-      what the pack needs; skip modules already in `package.json`.
+      what the pack needs; skip modules already in `package.json`. (Manifest
+      packs install from the prebuilt cache automatically; a manual `npm install`
+      is fine for the rest.)
    3. **Scaffold the code** — create the entities / wiring / files the pack calls
       for (the pack's row says what; the pack's SKILL.md has the patterns).
    4. **Read the pack skill** — open `.agents/skills/<pack>/SKILL.md` and follow

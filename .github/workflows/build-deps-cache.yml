@@ -1,0 +1,126 @@
+name: Build dependency cache
+
+# Publishes prebuilt, per-platform `node_modules` tarballs to the rolling
+# `deps-cache` GitHub Release so `scripts/fetch-deps.mjs` (npm run setup) can
+# install dependencies by download+extract instead of a cold `npm install`.
+#
+# Rebuild whenever the resolved tree can change: the base lockfile, the analytics
+# pack's dependency manifest, or the shared key/asset-name logic.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package-lock.json
+      - .agents/skills/analytics/pack.json
+      - scripts/deps-cache-lib.mjs
+      - .github/workflows/build-deps-cache.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deps-cache
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: ${{ matrix.variant }} · ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, macos-13, windows-latest]
+        variant: [base, analytics]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: macos-14
+            platform: darwin-arm64
+          - os: macos-13
+            platform: darwin-x64
+          - os: windows-latest
+            platform: win32-x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # LTS. The cached tree's native deps (esbuild/swc + N-API addons:
+          # keytar, msal, deviceid) are ABI-stable prebuilds, so it works across
+          # client Node majors; fetch-deps falls back to npm otherwise.
+          node-version: 22
+          cache: npm
+
+      # Compute the asset name from the PRISTINE, committed lockfile — before the
+      # analytics install rewrites package-lock.json — so the hash matches what
+      # the client computes pre-install.
+      - name: Compute asset name
+        id: name
+        run: |
+          asset=$(node scripts/deps-cache-lib.mjs --variant "${{ matrix.variant }}" --platform "${{ matrix.platform }}" --field asset)
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+          echo "Asset: $asset"
+
+      - name: Install base dependencies
+        if: matrix.variant == 'base'
+        run: npm ci --no-audit --no-fund
+
+      - name: Install base + analytics dependencies
+        if: matrix.variant == 'analytics'
+        run: |
+          npm ci --no-audit --no-fund
+          npm run pack:add -- analytics --no-install
+          npm install --no-audit --no-fund
+
+      - name: Archive node_modules
+        run: |
+          mkdir -p dist-cache
+          tar -czf "dist-cache/${{ steps.name.outputs.asset }}" node_modules
+          node scripts/write-asset-meta.mjs \
+            --file "dist-cache/${{ steps.name.outputs.asset }}" \
+            --variant "${{ matrix.variant }}" \
+            --platform "${{ matrix.platform }}"
+          ls -lh dist-cache
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cache-${{ matrix.variant }}-${{ matrix.platform }}
+          path: dist-cache/*
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish deps-cache release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Build manifest
+        run: node scripts/build-manifest.mjs --in artifacts --out artifacts/manifest.json
+
+      - name: Publish / refresh release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view deps-cache >/dev/null 2>&1 || \
+            gh release create deps-cache \
+              --title "Prebuilt dependency cache" \
+              --notes "Auto-generated per-platform node_modules tarballs for fast template setup. Internal build artifact — asset names and layout may change without notice." \
+              --prerelease
+          mapfile -t tarballs < <(find artifacts -name '*.tar.gz' | sort)
+          echo "Uploading ${#tarballs[@]} tarball(s) + manifest.json"
+          gh release upload deps-cache "${tarballs[@]}" artifacts/manifest.json --clobber

@@ -1,3 +1,5 @@
 Ask what Fabric app the user wants, derive a kebab-case name, then run:
-npx @microsoft/rayfin-cli@latest init . --project-name "<name>" --template https://github.com/spatney/universal-app --workspace "rayfin-playground" --overwrite
+npx @microsoft/rayfin-cli@latest init . --project-name "<name>" --template https://github.com/spatney/universal-app --workspace "rayfin-playground" --overwrite --skip-install
+Then install dependencies fast from the prebuilt cache (it auto-falls back to a normal install):
+npm run setup
 Treat their answer as requirements, not just a name. Autonomously implement, test, fix, and deploy the complete app, then provide its link. Never ask the user to run commands. If login is required, open the login screen for them. Do not stop at scaffolding or local development.
