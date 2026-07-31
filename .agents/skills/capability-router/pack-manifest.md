@@ -46,10 +46,17 @@ dozens of packages + rewire scripts" — the slow part of a build.
     { "from": "kit/lib", "to": "src/lib" },
     { "from": "kit/global.css", "to": "src/global.css" },
 
-    // Seed files replace the BASE starter once, then never clobber user edits:
-    // written only if the destination is missing OR still contains the marker
-    // string (i.e. it's the untouched base file).
-    { "from": "kit/app/App.tsx", "to": "src/App.tsx", "seedReplaceIfContains": "HomePage" }
+    // Seed files replace the BASE starter, then never clobber your edits. The
+    // pack records the sha256 of each base starter it is allowed to replace, so
+    // "is this still the untouched base file?" is answered by content, not by
+    // guesswork: written only if the destination is missing or its digest is
+    // listed here. List more than one to cover several base revisions.
+    // `npm test` fails with the expected digest whenever a base starter changes.
+    {
+      "from": "kit/app/App.tsx",
+      "to": "src/App.tsx",
+      "seedReplaceIfPristine": ["9b24f4eb…"]
+    }
   ],
 
   // 5) Skills to read next, printed after scaffolding (build in this order).
@@ -57,11 +64,21 @@ dozens of packages + rewire scripts" — the slow part of a build.
 }
 ```
 
+> **Never key a seed on a substring.** The earlier `seedReplaceIfContains` did,
+> and it silently destroyed real work: its markers (`HomePage`, `./main.css`)
+> survive exactly the edits worth protecting, so an `App.tsx` that had been given
+> an auth route guard still "contained `HomePage`" and was overwritten without a
+> word. The key is no longer honored — a manifest still using it keeps the user's
+> file and prints a migration notice.
+
 ## Guarantees
 
 - **Idempotent.** Re-running `pack:add` sets the same flags, adds no duplicate
-  deps, and re-copies pack-owned kit files. Seed files (`seedReplaceIfContains`)
-  are preserved once you've edited them.
+  deps, and re-copies pack-owned kit files. A seed whose destination already
+  matches the pack's own copy is a silent no-op.
+- **Non-destructive.** A seed is replaced only when the destination is provably
+  the untouched base starter. Anything else is yours: the scaffolder keeps it and
+  prints the kit path to merge from. `--force-seeds` overrides this.
 - **Lean base.** A pack adds only what it needs. The base stays universal; the
   shared toolchain and lockfile live in the base, so pack installs are small and
   deterministic.
@@ -70,10 +87,15 @@ dozens of packages + rewire scripts" — the slow part of a build.
 
 - `--no-install` — apply everything except `npm install` (install yourself later).
 - `--dry-run` — print the planned actions and write nothing.
+- `--force-seeds` — overwrite seed files even if you've customized them.
 
 ## Adding a pack manifest
 
 1. Put the pack's copy-in files under `.agents/skills/<pack>/kit/**`.
 2. Write `.agents/skills/<pack>/pack.json` per the schema above.
-3. Test with `npm run pack:add -- <pack> --dry-run`, then for real on a scratch
-   copy. Keep it idempotent.
+3. For any seed file, record the base starter's digest in `seedReplaceIfPristine`.
+   Run `npm test` — it asserts the recorded digests still match the base starters
+   and prints the expected value when they don't.
+4. Test with `npm run pack:add -- <pack> --dry-run`, then for real on a scratch
+   copy. Verify twice: once over the untouched base (the seed lands) and once
+   over a customized file (the seed is kept back). Keep it idempotent.
