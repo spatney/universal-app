@@ -39,8 +39,8 @@
     { "from": "kit/fabric.generated.ts", "to": "src/fabric.generated.ts" },
     { "from": "kit/fabric.yaml", "to": "fabric.yaml" },
     { "from": "kit/scripts/preview-visual.mjs", "to": "scripts/preview-visual.mjs" },
-    { "from": "kit/app/App.tsx", "to": "src/App.tsx", "seedReplaceIfContains": "HomePage" },
-    { "from": "kit/app/main.tsx", "to": "src/main.tsx", "seedReplaceIfContains": "./main.css" }
+    { "from": "kit/app/App.tsx", "to": "src/App.tsx", "seedReplaceIfPristine": ["9b24f4eba1965a1ad8a7c0c1b700b76154dae35da89366629c0acdea514dfb4c"] },
+    { "from": "kit/app/main.tsx", "to": "src/main.tsx", "seedReplaceIfPristine": ["3c4a47cda8932bf496f590f46becf9761ef87a0c4aba3becdfc1bd572e130548"] }
   ],
   "next": ["build-workflow", "visuals", "dax", "headless-preview", "fabric-data", "app-design"]
 }

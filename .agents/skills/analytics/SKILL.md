@@ -28,7 +28,16 @@ That runs the scaffolder (`scripts/scaffold.mjs`) against this pack's manifest
   inlined data — never blank), leaving them alone if you've already edited them,
 - runs a single `npm install`.
 
-Flags: `--no-install` (skip install), `--dry-run` (print the plan, write nothing).
+Flags: `--no-install` (skip install), `--dry-run` (print the plan, write nothing),
+`--force-seeds` (overwrite seed files you've customized).
+
+> **If you wired authentication first**, the scaffolder keeps your `src/App.tsx`
+> and `src/main.tsx` and tells you so. That is deliberate — it will not throw away
+> your `AuthProvider` or route guard. But the kit's versions carry the theme,
+> selection, and filter providers the dashboard needs, so merge them in by hand:
+> take the provider tree from `.agents/skills/analytics/kit/app/App.tsx` and the
+> font/`global.css` imports from `kit/app/main.tsx`, and keep your auth wiring
+> wrapped around them.
 
 You now have a **runnable starter dashboard**: `npm run gallery` to view it,
 `npm run preview -- --spec <file>` for headless visual checks, `npm run rayfin:up`

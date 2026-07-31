@@ -18,6 +18,7 @@
     "build": "tsc -b && vite build",
     "build:fabric": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "node --test scripts/",
     "rayfin:up": "rayfin up",
     "pack:add": "node scripts/scaffold.mjs"
   },

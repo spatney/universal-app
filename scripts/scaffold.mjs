@@ -13,14 +13,16 @@
 // pack-agnostic: future connectors/capabilities just ship their own `pack.json`.
 //
 // Usage:
-//   node scripts/scaffold.mjs <pack> [--no-install] [--dry-run]
-//   npm run pack:add -- <pack> [--no-install] [--dry-run]
+//   node scripts/scaffold.mjs <pack> [--no-install] [--dry-run] [--force-seeds]
+//   npm run pack:add -- <pack> [--no-install] [--dry-run] [--force-seeds]
 //
 // Flags:
 //   --no-install   Do everything except `npm install` (fast; install yourself).
 //   --dry-run      Print the planned actions without writing anything.
+//   --force-seeds  Overwrite seed files even if you've customized them.
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   copyFileSync,
   existsSync,
@@ -98,6 +100,48 @@ function copyDir(fromDir, toDir, onFile, dryRun) {
   }
 }
 
+/**
+ * Content digest used to recognize an untouched base seed. Line endings and a
+ * leading BOM are normalized so a Windows checkout hashes the same as a Linux
+ * one.
+ */
+export function seedDigest(text) {
+  return createHash('sha256')
+    .update(text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n'))
+    .digest('hex');
+}
+
+/**
+ * Decide what to do with a seed file — one the pack wants to plant over the base
+ * starter, but which the user may already own.
+ *
+ * A seed is only replaced when we can *prove* the destination is still the
+ * untouched base starter: it is missing, or its content digest matches one of
+ * the base revisions the pack recorded in `seedReplaceIfPristine`. Anything else
+ * is the user's file and is preserved. (Same model as dpkg conffile handling.)
+ *
+ * This must not be inferred from a substring. A marker like `HomePage` or
+ * `./main.css` survives exactly the edits worth protecting — wiring
+ * `AuthProvider` into `main.tsx` keeps the `./main.css` import — so a substring
+ * test reports "pristine" for a customized file and silently destroys it.
+ *
+ * @returns {'write'|'preserve'|'current'} `current` means the pack's own seed is
+ *   already in place, so a re-run is a silent no-op.
+ */
+export function classifySeed(entry, destText, { force = false, sourceText } = {}) {
+  if (destText === undefined) return 'write';
+  if (sourceText !== undefined && seedDigest(destText) === seedDigest(sourceText)) {
+    return 'current';
+  }
+  if (force) return 'write';
+
+  const pristine = entry.seedReplaceIfPristine;
+  if (pristine === undefined) return 'preserve';
+
+  const digests = Array.isArray(pristine) ? pristine : [pristine];
+  return digests.includes(seedDigest(destText)) ? 'write' : 'preserve';
+}
+
 function main() {
   const { pack, flags } = parseArgs(process.argv.slice(2));
   if (!pack) {
@@ -159,7 +203,8 @@ function main() {
 
   // 3) copy kit files
   let copied = 0;
-  const skipped = [];
+  const preserved = [];
+  const legacySeeds = [];
   for (const entry of manifest.copy ?? []) {
     const from = join(packDir, entry.from);
     const to = join(ROOT, entry.to);
@@ -167,12 +212,20 @@ function main() {
       warn(`  ! missing source: ${entry.from}`);
       continue;
     }
-    // Seed files replace the base starter once, then never clobber user edits.
-    if (entry.seedReplaceIfContains) {
-      const present = existsSync(to);
-      const isBaseSeed = present && readFileSync(to, 'utf8').includes(entry.seedReplaceIfContains);
-      if (present && !isBaseSeed) {
-        skipped.push(entry.to);
+    // Seed files plant the pack's starter over the base one, but never clobber a
+    // file the user has made their own.
+    const isSeed = entry.seedReplaceIfPristine !== undefined
+      || entry.seedReplaceIfContains !== undefined;
+    if (isSeed) {
+      const destText = existsSync(to) ? readFileSync(to, 'utf8') : undefined;
+      const action = classifySeed(entry, destText, {
+        force: !!flags['force-seeds'],
+        sourceText: readFileSync(from, 'utf8'),
+      });
+      if (action === 'current') continue;
+      if (action === 'preserve') {
+        preserved.push({ to: entry.to, from: `.agents/skills/${pack}/${entry.from}` });
+        if (entry.seedReplaceIfPristine === undefined) legacySeeds.push(entry.to);
         continue;
       }
       if (!dryRun) {
@@ -191,7 +244,23 @@ function main() {
       copied++;
     }
   }
-  log(`  - copied ${copied} file(s)` + (skipped.length ? `; kept your ${skipped.join(', ')}` : ''));
+  log(`  - copied ${copied} file(s)`);
+
+  if (legacySeeds.length) {
+    warn(
+      `  ! ${legacySeeds.join(', ')}: "seedReplaceIfContains" is no longer honored — ` +
+      'a substring cannot prove a file is unmodified. Record the base digest in ' +
+      '"seedReplaceIfPristine" instead (see pack-manifest.md). Kept your file.',
+    );
+  }
+
+  // A preserved seed is not a no-op: the pack's own version carries providers the
+  // rest of the kit depends on, so say exactly what still needs merging.
+  if (preserved.length) {
+    log('\n  Kept your customized file(s) — merge the pack\'s version in by hand:');
+    for (const p of preserved) log(`    - ${p.to}  <-  ${p.from}`);
+    log('    (re-run with --force-seeds to overwrite instead)');
+  }
 
   // 4) install — route through the prebuilt dependency cache. For a pack that
   //    has a published cache variant (e.g. analytics) this extracts a prebuilt
@@ -224,4 +293,7 @@ function main() {
   }
 }
 
-main();
+// Only run when invoked directly, so tests can import the helpers above.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}
