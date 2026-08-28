@@ -138,6 +138,11 @@ const { user, signOut } = useAuth();
 // <button onClick={() => void signOut()}>Sign out</button>
 ```
 
+> **Adding a capability pack later?** `npm run pack:add -- <pack>` will not
+> overwrite the `src/main.tsx` and `src/App.tsx` you wired above — it keeps them
+> and prints the kit files to merge in by hand. Merge the pack's providers
+> *inside* your `AuthProvider` and route guard.
+
 ## Step 4 — deploy
 
 ```bash
